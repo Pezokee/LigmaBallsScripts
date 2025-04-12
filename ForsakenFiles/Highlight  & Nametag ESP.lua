@@ -10,7 +10,7 @@ local function createHighlightESP(player, isPink)
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESPHighlight"
     highlight.FillTransparency = 1  -- No fill
-    highlight.OutlineTransparency = 0.8  -- Make outline a little transparent (thinner effect)
+    highlight.OutlineTransparency = 0.6  -- Make outline a little transparent (thinner effect)
 
     if isPink then
         highlight.OutlineColor = Color3.fromRGB(255, 105, 180)  -- Pink color for players with QueryHitbox or ExpressionHolder
