@@ -1,0 +1,20 @@
+-- Loop to highlight all players
+while wait() do
+    for _, player in pairs(game.Players:GetPlayers()) do
+        -- Check if the player has a character and a humanoid
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local character = player.Character
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            
+            -- Create the outline effect if it doesn't already exist
+            if not character:FindFirstChild("Highlight") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "Highlight"
+                highlight.Parent = character
+                highlight.FillTransparency = 1 -- No fill
+                highlight.OutlineTransparency = 0.6 -- 0.6 transparency for outline
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- White color
+            end
+        end
+    end
+end
