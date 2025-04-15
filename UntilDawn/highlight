@@ -1,0 +1,22 @@
+while wait() do
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local character = player.Character
+
+            if not character:FindFirstChild("Highlight") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "Highlight"
+                highlight.Parent = character
+                highlight.FillTransparency = 1
+                highlight.OutlineTransparency = 0.6
+
+                -- Check if player is in workspace.Killers
+                if character.Parent == workspace:FindFirstChild("Killers") then
+                    highlight.OutlineColor = Color3.fromRGB(255, 0, 0) -- Red
+                else
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- White
+                end
+            end
+        end
+    end
+end
