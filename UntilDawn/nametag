@@ -1,0 +1,110 @@
+local fontType = Enum.Font.Code
+local textSize = 14
+local textColor = Color3.fromRGB(255, 255, 255)
+local outlineColor = Color3.fromRGB(0, 0, 0)
+local espName = "TextESP"
+
+local function calculateDistance(localPlayer, targetRoot)
+    local localCharacter = localPlayer.Character
+    local localRoot = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart")
+    if localRoot and targetRoot then
+        return math.floor((localRoot.Position - targetRoot.Position).Magnitude)
+    end
+    return "Unknown"
+end
+
+local function getHealth(target)
+    local humanoid = target:FindFirstChild("Humanoid")
+    if humanoid then
+        return math.floor(humanoid.Health)
+    end
+    return "Unknown"
+end
+
+local function createTextESP(target, displayName, localPlayer)
+    if target:FindFirstChild(espName) then return end
+
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = espName
+    billboardGui.Parent = target
+    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+    billboardGui.AlwaysOnTop = true
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Parent = billboardGui
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Font = fontType
+    textLabel.TextSize = textSize
+    textLabel.TextStrokeTransparency = 0
+
+    -- Check if the character is parented in workspace.Killers
+    local character = target.Parent
+    local isKiller = character and character.Parent == workspace:FindFirstChild("Killers")
+    if isKiller then
+        textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        textLabel.TextStrokeColor3 = Color3.fromRGB(100, 0, 0)
+    else
+        textLabel.TextColor3 = textColor
+        textLabel.TextStrokeColor3 = outlineColor
+    end
+
+    local distance = calculateDistance(localPlayer, target)
+    local health = getHealth(target.Parent)
+    textLabel.Text = displayName .. " | Distance: " .. tostring(distance) .. " studs | Health: " .. tostring(health)
+
+    spawn(function()
+        while wait(0.1) do
+            if textLabel.Parent and localPlayer.Character then
+                distance = calculateDistance(localPlayer, target)
+                health = getHealth(target.Parent)
+                textLabel.Text = displayName .. " | Distance: " .. tostring(distance) .. " studs | Health: " .. tostring(health)
+            else
+                break
+            end
+        end
+    end)
+end
+
+local function applyESPToPlayer(player, localPlayer)
+    player.CharacterAdded:Connect(function(character)
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        createTextESP(humanoidRootPart, player.DisplayName, localPlayer)
+
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.Died:Connect(function()
+            if character:FindFirstChild(espName) then
+                character:FindFirstChild(espName):Destroy()
+            end
+        end)
+    end)
+
+    if player.Character then
+        local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            createTextESP(humanoidRootPart, player.DisplayName, localPlayer)
+        end
+    end
+end
+
+local function applyESPToPlayers()
+    local players = game:GetService("Players")
+    local localPlayer = players.LocalPlayer
+
+    for _, player in pairs(players:GetPlayers()) do
+        applyESPToPlayer(player, localPlayer)
+    end
+
+    players.PlayerAdded:Connect(function(player)
+        applyESPToPlayer(player, localPlayer)
+    end)
+
+    players.PlayerRemoving:Connect(function(player)
+        if player.Character and player.Character:FindFirstChild(espName) then
+            player.Character:FindFirstChild(espName):Destroy()
+        end
+    end)
+end
+
+applyESPToPlayers()
