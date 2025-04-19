@@ -2,17 +2,14 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local noclipEnabled = true -- set to true by default
 
--- Re-apply noclip every frame while enabled
-RunService.Stepped:Connect(function()
-    if noclipEnabled then
-        local character = player.Character
-        if character then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
+-- Return the connection so the toggle can disconnect it
+return RunService.Stepped:Connect(function()
+    local character = player.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
             end
         end
     end
