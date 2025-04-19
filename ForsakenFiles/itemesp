@@ -1,0 +1,107 @@
+-- Settings for ESP
+local fontType = Enum.Font.Code
+local textSize = 14
+local textColor = Color3.fromRGB(0, 255, 255) -- Cyan color
+local outlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
+local espName = "TextESP"
+
+-- Function to calculate distance
+local function calculateDistance(localPlayer, targetRoot)
+    local localCharacter = localPlayer.Character
+    local localRoot = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart")
+    if localRoot and targetRoot then
+        return math.floor((localRoot.Position - targetRoot.Position).Magnitude) -- Distance in studs
+    end
+    return "Unknown"
+end
+
+-- Function to create ESP text
+local function createTextESP(target, displayName, localPlayer)
+    if target:FindFirstChild(espName) then
+        return -- Prevent duplicate ESP
+    end
+
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = espName
+    billboardGui.Parent = target
+    billboardGui.Size = UDim2.new(0, 200, 0, 50) -- Fixed size in pixels
+    billboardGui.AlwaysOnTop = true
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0) -- Position above the target
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Parent = billboardGui
+    textLabel.Size = UDim2.new(1, 0, 1, 0) -- Fill the billboard
+    textLabel.BackgroundTransparency = 1
+    textLabel.Font = fontType
+    textLabel.TextSize = textSize -- Fixed text size
+    textLabel.TextColor3 = textColor
+    textLabel.TextStrokeTransparency = 0 -- Fully visible outline
+    textLabel.TextStrokeColor3 = outlineColor -- Black outline
+
+    -- Initial text setup (just display the tool's name)
+    textLabel.Text = displayName
+
+    -- Continuously update distance
+    spawn(function()
+        while wait(0.1) do
+            if textLabel.Parent and localPlayer.Character then
+                local distance = calculateDistance(localPlayer, target)
+                textLabel.Text = displayName .. " | Distance: " .. tostring(distance) .. " studs"
+            else
+                break -- Stop updating if the target is removed
+            end
+        end
+    end)
+end
+
+-- Function to handle ESP for a single tool
+local function applyESPToTool(tool, localPlayer)
+    -- Create the ESP text above the tool
+    createTextESP(tool, tool.Name, localPlayer)
+end
+
+-- Function to apply ESP to all tools in the workspace
+local function applyESPToTools()
+    local localPlayer = game.Players.LocalPlayer -- Reference for distance calculation
+
+    for _, tool in pairs(workspace.Map.Ingame:GetChildren()) do
+        if tool:IsA("Tool") or tool:IsA("BasePart") then
+            applyESPToTool(tool, localPlayer)
+        end
+    end
+
+    -- Handle new tools being added to the workspace
+    workspace.Map.Ingame.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") or child:IsA("BasePart") then
+            applyESPToTool(child, localPlayer)
+        end
+    end)
+
+    -- Handle tools being removed from the workspace
+    workspace.Map.Ingame.ChildRemoved:Connect(function(child)
+        if child:FindFirstChild(espName) then
+            child:FindFirstChild(espName):Destroy()
+        end
+    end)
+end
+
+-- Initial application
+applyESPToTools()
+
+-- Loop to highlight all tools
+while wait() do
+    for _, tool in pairs(workspace.Map.Ingame:GetChildren()) do
+        -- Check if the tool is a valid object (part, model, etc.)
+        if tool:IsA("Tool") or tool:IsA("BasePart") then
+            -- Create the outline effect if it doesn't already exist
+            if not tool:FindFirstChild("Highlight") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "Highlight"
+                highlight.Parent = tool
+                highlight.FillTransparency = 1 -- No fill
+                highlight.OutlineTransparency = 0.7 -- 0.6 transparency for outline
+                highlight.OutlineColor = Color3.fromRGB(0, 255, 255) -- Cyan color
+            end
+        end
+    end
+end
