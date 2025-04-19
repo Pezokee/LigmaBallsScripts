@@ -1,0 +1,91 @@
+-- Loop to highlight all objects named "Generator"
+while wait() do
+    for _, item in pairs(workspace.Map.Ingame.Map:GetDescendants()) do
+        if item.Name == "Generator" and (item:IsA("Model") or item:IsA("BasePart")) then
+            if not item:FindFirstChild("Highlight") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "Highlight"
+                highlight.Parent = item
+                highlight.FillTransparency = 1
+                highlight.OutlineTransparency = 0.6
+                highlight.OutlineColor = Color3.fromRGB(0, 255, 255) -- Cyan
+            end
+        end
+    end
+end
+
+-- Settings
+local fontType = Enum.Font.Code
+local textSize = 14
+local textColor = Color3.fromRGB(0, 255, 255) -- Cyan
+local outlineColor = Color3.fromRGB(0, 0, 0)
+local espName = "TextESP"
+
+-- Function to calculate distance from player to target
+local function calculateDistance(localPlayer, targetRoot)
+    local localRoot = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if localRoot and targetRoot then
+        return math.floor((localRoot.Position - targetRoot.Position).Magnitude)
+    end
+    return "Unknown"
+end
+
+-- Function to create BillboardGui nametag
+local function createTextESP(target, localPlayer)
+    if target:FindFirstChild(espName) then return end
+
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = espName
+    billboardGui.Parent = target
+    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+    billboardGui.AlwaysOnTop = true
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Parent = billboardGui
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Font = fontType
+    textLabel.TextSize = textSize
+    textLabel.TextColor3 = textColor
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextStrokeColor3 = outlineColor
+
+    spawn(function()
+        while wait(0.1) do
+            if textLabel.Parent and localPlayer.Character then
+                local distance = calculateDistance(localPlayer, target)
+                textLabel.Text = "Generator | Distance: " .. tostring(distance) .. " studs"
+            else
+                break
+            end
+        end
+    end)
+end
+
+-- Apply ESP to all Generators
+local function applyESPToGenerators()
+    local localPlayer = game.Players.LocalPlayer
+
+    for _, item in pairs(workspace.Map.Ingame.Map:GetDescendants()) do
+        if item.Name == "Generator" and (item:IsA("BasePart") or item:IsA("Model")) then
+            local part = item:IsA("Model") and item:FindFirstChildWhichIsA("BasePart") or item
+            if part then
+                createTextESP(part, localPlayer)
+            end
+        end
+    end
+
+    -- Detect new generators added
+    workspace.Map.Ingame.Map.DescendantAdded:Connect(function(item)
+        if item.Name == "Generator" and (item:IsA("BasePart") or item:IsA("Model")) then
+            local part = item:IsA("Model") and item:FindFirstChildWhichIsA("BasePart") or item
+            if part then
+                createTextESP(part, game.Players.LocalPlayer)
+            end
+        end
+    end)
+end
+
+-- Initial trigger
+applyESPToGenerators()
